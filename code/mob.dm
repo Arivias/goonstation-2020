@@ -14,6 +14,9 @@
 	var/datum/bioHolder/bioHolder = null
 	var/datum/targetable/targeting_spell = null
 
+	var/datum/targetable/active_box_select_callback = null
+	var/box_select_completed = 0
+
 	var/last_move_trigger = 0
 
 	var/obj/screen/internals = null
@@ -466,9 +469,18 @@
 	return
 
 /mob/proc/onMouseDown(object,location,control,params)
+	boutput(usr,"down")
+	if(active_box_select_callback) active_box_select_callback.last_box_origin = location
 	return
 
 /mob/proc/onMouseUp(object,location,control,params)
+	boutput(usr,"up")
+	if(active_box_select_callback)
+		boutput(usr,"cast")
+		active_box_select_callback.last_box_end = location
+		active_box_select_callback.handleCast()
+		box_select_completed = 1
+		active_box_select_callback = null //look into this...
 	return
 
 /mob/Bump(atom/movable/AM as mob|obj, yes)

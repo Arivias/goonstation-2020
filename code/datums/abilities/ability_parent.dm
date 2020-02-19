@@ -640,6 +640,11 @@
 		max_range = 10
 		targeted = 0
 		target_anything = 0
+
+		target_box = 0
+		last_box_origin = null
+		last_box_end = null
+
 		last_cast = 0
 		cooldown = 100
 		start_on_cooldown = 0
@@ -701,6 +706,9 @@
 		cast(atom/target)
 			if(interrupt_action_bars) actions.interrupt(holder.owner, INTERRUPT_ACT)
 			return
+		
+		cast_box()
+			return
 
 		onAttach(var/datum/abilityHolder/H)
 			if (src.start_on_cooldown)
@@ -715,6 +723,9 @@
 				logTheThing("debug", usr, null, "orphaned ability clicked: [name]. ([holder ? "no owner" : "no holder"])")
 				return 1
 			if (src.holder.locked == 1 && src.ignore_holder_lock != 1)
+				boutput(holder.owner, "<span style=\"color:red\">You're already casting an ability.</span>")
+				return 999
+			if (target_box && src.holder.owner.active_box_select_callback != null) //the mob already has a box select active
 				boutput(holder.owner, "<span style=\"color:red\">You're already casting an ability.</span>")
 				return 999
 			if (src.dont_lock_holder != 1)
@@ -748,14 +759,18 @@
 							boutput(holder.owner, "<span style=\"color:red\">You can't use this ability in virtual reality.</span>")
 							src.holder.locked = 0
 							return 999
-			if (src.targeted && src.target_nodamage_check && (target && target != holder.owner && check_target_immunity(target) == 1))
+			if (src.targeted && !src.target_box && src.target_nodamage_check && (target && target != holder.owner && check_target_immunity(target) == 1))
 				target.visible_message("<span style=\"color:red\"><B>[src.holder.owner]'s attack has no effect on [target] whatsoever!</B></span>")
 				src.holder.locked = 0
 				return 998
 			if (!castcheck())
 				src.holder.locked = 0
 				return 998
-			. = cast(target, params)
+			if (!src.target_box)
+				. = cast(target, params)
+			else
+				boutput(usr,"Start: [last_box_origin], end: [last_box_end]")
+				. = cast_box()
 			src.holder.locked = 0
 			if (!.)
 				holder.deductPoints(pointCost)

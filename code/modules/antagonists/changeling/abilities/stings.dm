@@ -8,6 +8,7 @@
 	targeted = 1
 	target_anything = 1
 	sticky = 1
+	target_box = 1
 
 	cast(atom/target)
 		if (..())

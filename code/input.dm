@@ -122,15 +122,15 @@ var/list/dirty_keystates = list()
 	*/
 
 	//also also heavy and not really uesd for anything important
-	/*
 	MouseDown(object,location,control,params)
 		var/mob/user = usr
+		boutput(usr,"pre-down")
 		user.onMouseDown(object,location,control,params)
 		return
-	*/
 
 	MouseUp(object,location,control,params)
 		var/mob/user = usr
+		boutput(usr,"pre-up")
 		user.onMouseUp(object,location,control,params)
 
 
@@ -153,6 +153,12 @@ var/list/dirty_keystates = list()
 		return
 
 	Click(atom/object, location, control, params)
+		//MOVE THIS
+		if (src.mob.active_box_select_callback) //No regular clicks while box select is active (this probably blocks cancelling?)
+			if (src.mob.box_select_completed) //If the select is done, remove it
+				src.mob.box_select_completed = 0
+				src.mob.active_box_select_callback = null
+			return
 		if(hellbanned && prob(click_drops)) //Drop some of their clicks
 			if(prob(2)) fake_lagspike()
 			return
@@ -169,7 +175,6 @@ var/list/dirty_keystates = list()
 				else
 					if (parameters["right"])
 						object.examine()
-
 
 		if (parameters["drag"] == "middle") //fixes exploit that basically gave everyone access to an aimbot
 			return

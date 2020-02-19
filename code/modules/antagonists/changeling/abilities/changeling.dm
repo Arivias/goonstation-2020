@@ -68,6 +68,7 @@
 			if (world.time < spell.last_cast)
 				return
 			owner.holder.owner.targeting_spell = owner
+			if (spell.target_box) owner.holder.owner.active_box_select_callback = owner //////////////////DEBUG LINE, REMOVE
 			owner.holder.owner.update_cursor()
 		else
 			SPAWN_DBG(0)
