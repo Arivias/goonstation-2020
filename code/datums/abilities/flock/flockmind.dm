@@ -305,3 +305,32 @@
 		return 1
 	panel.Subscribe(user)
 
+/////////////////////////////////////////
+
+/datum/targetable/flockmindAbility/packetHack
+	name = "Packethack"
+	desc = "Issue a remote command to an object"
+	icon_state = "open_door"
+	targeted = 1
+	target_anything = 1
+
+/datum/targetable/flockmindAbility/packetHack/cast(atom/target)
+	if(..())
+		return 1
+	if (istype(target,obj/machinery/door/airlock))
+	var/list/targets = list()
+	for(var/obj/machinery/door/airlock/A in range(10, holder.owner))
+		if(A.canAIControl())
+			targets += A
+	if(targets.len > 1)
+		// do casty stuff here
+		playsound(get_turf(holder.owner), "sound/misc/flockmind/flockmind_cast.ogg", 80, 1)
+		boutput(holder.owner, "<span class='text-blue'>You force open all the doors around you.</span>")
+		sleep(15)
+		for(var/obj/machinery/door/airlock/A in targets)
+			// open the door
+			SPAWN_DBG(1)
+				A.open()
+	else
+		boutput(holder.owner, "<span class='text-red'>No targets in range that can be opened via radio.</span>")
+		return 1
