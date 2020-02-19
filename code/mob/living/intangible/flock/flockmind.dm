@@ -79,6 +79,7 @@
 	src.addAbility(/datum/targetable/flockmindAbility/doorsOpen)
 	src.addAbility(/datum/targetable/flockmindAbility/radioStun)
 	src.addAbility(/datum/targetable/flockmindAbility/directSay)
+	src.addAbility(/datum/targetable/flockmindAbility/packetHack)
 
 /mob/living/intangible/flock/flockmind/proc/addAbility(var/abilityType)
 	src.abilityHolder.addAbility(abilityType)

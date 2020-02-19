@@ -308,7 +308,7 @@
 /////////////////////////////////////////
 
 /datum/targetable/flockmindAbility/packetHack
-	name = "Packethack"
+	name = "PacketHack"
 	desc = "Issue a remote command to an object"
 	icon_state = "open_door"
 	targeted = 1
@@ -317,7 +317,73 @@
 /datum/targetable/flockmindAbility/packetHack/cast(atom/target)
 	if(..())
 		return 1
-	if (istype(target,obj/machinery/door/airlock))
+	if (istype(target,/obj/machinery/door/airlock))
+		var/obj/machinery/door/airlock/D = target
+		if (get_dist(holder.owner,target) > D.radiorange)
+			boutput(usr,__red("Transmission failed: Target out of range."))
+			return 999
+		var/cmd = input("Select command to send.","Packethack") in list("open","close","lock","unlock","secure_open","secure_close")
+		if (D.aiControlDisabled > 0 || D.cant_emag)
+			boutput(usr,__red("PacketHack error: Command rejected."))
+			return
+		switch( cmd ) //copypasted from airlock
+			if("open")
+				SPAWN_DBG(0)
+					D.open(1)
+					D.send_status(,"0xDEADBEFF")
+
+			if("close")
+				SPAWN_DBG(0)
+					D.close(1)
+					D.send_status(,"0xDEADBEFF")
+
+			if("unlock")
+				D.locked = 0
+				D.update_icon()
+				D.send_status(,"0xDEADBEFF")
+
+			if("lock")
+				D.locked = 1
+				D.update_icon()
+				D.send_status()
+
+			if("secure_open")
+				SPAWN_DBG(0)
+					D.locked = 0
+					D.update_icon()
+
+					sleep(5)
+					D.open(1)
+
+					D.locked = 1
+					D.update_icon()
+					sleep(D.operation_time)
+					D.send_status(,"0xDEADBEFF")
+
+			if("secure_close")
+				SPAWN_DBG(0)
+					D.locked = 0
+					D.close(1)
+
+					D.locked = 1
+					sleep(5)
+					D.update_icon()
+					sleep(D.operation_time)
+					D.send_status(,"0xDEADBEFF")
+		boutput(usr,__blue("PacketHack: Command Accepted."))
+
+		return
+		/*
+		var/datum/signal/S = new datum/signal()
+		S.data["sender"] = "unknown"
+		S.data["address_1"] = D.net_id
+		S.data["command"] = cmd*/
+		//do stuff
+	
+	boutput(usr,__red("No target."))
+	return 999
+
+	/*
 	var/list/targets = list()
 	for(var/obj/machinery/door/airlock/A in range(10, holder.owner))
 		if(A.canAIControl())
@@ -334,3 +400,4 @@
 	else
 		boutput(holder.owner, "<span class='text-red'>No targets in range that can be opened via radio.</span>")
 		return 1
+	*/
