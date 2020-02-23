@@ -437,6 +437,8 @@ var/datum/preMapLoad/preMapLoad = new
 #include "code\mob\living\critter\small_animal.dm"
 #include "code\mob\living\critter\spider.dm"
 #include "code\mob\living\critter\wendigo.dm"
+#include "code\mob\living\critter\ai\aigraph.dm"
+#include "code\mob\living\critter\ai\aigraph_util.dm"
 #include "code\mob\living\critter\ai\aquatic.dm"
 #include "code\mob\living\critter\ai\shared.dm"
 #include "code\mob\living\critter\ai\sleeping.dm"
