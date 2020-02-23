@@ -1,8 +1,8 @@
-/proc/AStar(start, end, adjacent, heuristic, maxtraverse = 30, adjacent_param = null, exclude = null)
+/proc/AStar(start, end, adjacent, heuristic, maxtraverse = 30, adjacent_param = null, exclude = null, min_dist = 0)
 	var/list/open = list(start), list/nodeG = list(), list/nodeParent = list(), P = 0
 	while (P++ < open.len)
 		var/T = open[P], TG = nodeG[T]
-		if (T == end)
+		if (T == end || distance(T,end) <= min_dist)
 			var/list/R = list()
 			while (T)
 				R.Insert(1, T)
@@ -10,7 +10,7 @@
 			return R
 		var/list/other = call(T, adjacent)(adjacent_param)
 		for (var/next in other)
-			if (open.Find(next) || next == exclude) continue
+			if (open.Find(next) || next == exclude || (istype(exclude,/list) && next in exclude)) continue
 			var/G = TG + other[next], F = G + call(next, heuristic)(end)
 			for (var/i = P; i <= open.len;)
 				if (i++ == open.len || open[open[i]] >= F)
@@ -48,8 +48,10 @@
 
 		openSet -= current
 		closedSet += current
-		var/list/neighbors = getNeighbors(current, alldirs)
+		var/list/neighbors = adjacent ? call(current,adjacent)(adjacent_param) : getNeighbors(current, alldirs, adjacent_param)
 		for(var/neighbor in neighbors)
+			if(exclude && neighbor in exclude)
+				continue
 			if(neighbor in closedSet)
 				continue // already checked this one
 			var/tentativeGScore = gScore[current] + distance(current, neighbor)
@@ -109,7 +111,7 @@
 	#endif
 	return .
 
-/proc/getNeighbors(turf/current, list/directions)
+/proc/getNeighbors(turf/current, list/directions, obj/item/card/id/ID=null)
 	. = list()
 	// handle cardinals straightforwardly
 	var/list/cardinalTurfs = list()
@@ -117,14 +119,14 @@
 		if(direction in directions)
 			var/turf/T = get_step(current, direction)
 			cardinalTurfs["[direction]"] = 0 // can't pass
-			if(T && checkTurfPassable(T))
+			if(T && checkTurfPassable(T, ID))
 				. += T
 				cardinalTurfs["[direction]"] = 1 // can pass
 	 //diagonals need to avoid the leaking problem
 	for(var/direction in ordinal)
 		if(direction in directions)
 			var/turf/T = get_step(current, direction)
-			if(T && checkTurfPassable(T))
+			if(T && checkTurfPassable(T, ID))
 				// check relevant cardinals
 				var/clear = 1
 				for(var/cardinal in cardinal)
@@ -136,7 +138,7 @@
 					. += T
 
 // shamelessly stolen from further down and modified
-/proc/checkTurfPassable(turf/T)
+/proc/checkTurfPassable(turf/T, obj/item/card/id/ID=null)
 	if(!T)
 		return 0 // can't go on a turf that doesn't exist!!
 	if(T.density) // simplest case
@@ -147,6 +149,8 @@
 				var/obj/machinery/door/D = O
 				if (D.isblocked())
 					return 0 // a blocked door is a blocking door
+				if (D.check_access(ID))
+					return 1
 			if (ismob(O))
 				var/mob/M = O
 				if (M.anchored)
