@@ -10,10 +10,12 @@ datum/controller/process/mob_ai
 			scheck()
 
 		// this needs to be made more generic, but for now, do it like this, i guess, ugh
+		/*
 		for(var/mob/living/critter/flock/F in mobs)
-			if(F.is_npc && F.ai)
+			if(F.is_npc)
 				F.ai.tick()
 				scheck()
+		*/
 
 		//we actually remove fish from Mobs list to save on some server load. sorry. commenting this out for now
 		/*

@@ -1,3 +1,4 @@
+/*
 // base shared flock AI stuff
 // main default "what do we do next" task, run for one tick and then switches to a new task
 /datum/aiHolder/flock
@@ -55,7 +56,7 @@
 		// let's not spam eggs all the time
 		if(isnull(locate(/obj/flock_structure/egg) in F))
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), F, 0, null, /proc/heuristic, 40))
+			if(AStar(get_turf(holder.owner), F, /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 40))
 				targets += F
 	return targets
 
@@ -115,7 +116,7 @@
 	if(F && F.flock)
 		// if we can go for a tile we already have reserved, go for it
 		var/turf/simulated/reserved = F.flock.busy_tiles[F.real_name]
-		if(istype(reserved) && !isfeathertile(reserved) && cirrAstar(get_turf(holder.owner), reserved, 1, null, /proc/heuristic, 20))
+		if(istype(reserved) && !isfeathertile(reserved) && AStar(get_turf(holder.owner), reserved, /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 20,,,1))
 			targets += reserved
 			return targets
 		// if there's a priority tile we can go for, do it
@@ -123,7 +124,7 @@
 		if(priority_turfs && priority_turfs.len)
 			for(var/turf/simulated/PT in priority_turfs)
 				// if we can get a valid path to the target, include it for consideration
-				if(cirrAstar(get_turf(holder.owner), PT, 1, null, /proc/heuristic, 80))
+				if(AStar(get_turf(holder.owner), PT, /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 80,,,1))
 					targets += PT
 			return targets
 
@@ -134,7 +135,7 @@
 			if(F && F.flock && !F.flock.isTurfFree(T, F.real_name))
 				continue // this tile's been claimed by someone else
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), T, 1, null, /proc/heuristic, 40))
+			if(AStar(get_turf(holder.owner), T, /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 40,,,1))
 				targets += T
 	return targets
 
@@ -211,7 +212,7 @@
 			continue
 		if(F.get_health_percentage() < 0.66)
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), get_turf(F), 1, null, /proc/heuristic, 40))
+			if(AStar(get_turf(holder.owner), get_turf(F), /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 40,,,1))
 				targets += F
 	return targets
 
@@ -269,7 +270,7 @@
 	for(var/obj/storage/S in view(max_dist, holder.owner))
 		if(!S.open && !S.welded && !S.locked)
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), get_turf(S), 1, null, /proc/heuristic, 10))
+			if(AStar(get_turf(holder.owner), get_turf(S), /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 10,,,1))
 				targets += S
 	return targets
 
@@ -327,7 +328,7 @@
 	for(var/obj/item/storage/I in view(max_dist, holder.owner))
 		if(I.contents.len > 0 && I.loc != holder.owner && I.does_not_open_in_pocket)
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), get_turf(I), 1, null, /proc/heuristic, 10))
+			if(AStar(get_turf(holder.owner), get_turf(I), /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 10,,,1))
 				targets += I
 	return targets
 
@@ -438,7 +439,7 @@
 				if(P.amount <= 0)
 					continue // do not try to fetch paper out of an empty paper bin forever
 			// if we can get a valid path to the target, include it for consideration
-			if(cirrAstar(get_turf(holder.owner), get_turf(I), 1, null, /proc/heuristic, 40))
+			if(AStar(get_turf(holder.owner), get_turf(I), /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 40,,,1))
 				targets += I
 	return targets
 
@@ -601,7 +602,8 @@
 				// mob is a valid target, check if they're not already in a cage
 				if(!istype(M.loc, /obj/icecube/flockdrone))
 					// if we can get a valid path to the target, include it for consideration
-					if(cirrAstar(get_turf(holder.owner), get_turf(M), 1, null, /proc/heuristic, 40))
+					if(AStar(get_turf(holder.owner), get_turf(M), /turf/proc/CardinalTurfsWithAccess, /turf/proc/Distance, 40,,,1))
 						// GO AND IMPRISON THEM
 						targets += M
 	return targets
+*/

@@ -37,10 +37,25 @@
 
 /mob/living/critter/flock/drone/New(var/atom/location, var/datum/flock/F=null)
 	..()
+	
+	/*AI NODEGRAPH DEBUGING
+	var/datum/ai_graph_root/root = new(src)
+	//var/datum/ai_graph_node/testnode/newnode = new()
+	var/datum/ai_graph_node/branch/sequence/newnodeseq = new()
+	newnodeseq.add_new_child(/datum/ai_graph_node/testnode)
+	root.set_root(newnodeseq)
+	root.start()
+	*///////////////////////
 
-	// ai setup
-	src.ai = new /datum/aiHolder/flock/drone()
-	src.ai.owner = src
+	// old ai setup
+	//src.ai = new /datum/aiHolder/flock/drone()
+	//src.ai.owner = src
+	/*src.ai = new /datum/ai_graph_root(src)
+	var/datum/ai_graph_node/tempnode = src.ai.create(/datum/ai_graph_node/inline/command_filter,list(src.ai.create(/datum/ai_graph_node/wander)))
+	src.ai.set_root(src.ai.create(/datum/ai_graph_node/inline/overclock,list(tempnode)))
+	src.ai.start()
+	*/
+	src.ai = new /datum/ai_graph_root/flockdrone(src)
 
 	SPAWN_DBG(30) // aaaaaaa
 		src.zone_sel.change_hud_style('icons/mob/flock_ui.dmi')
@@ -58,16 +73,19 @@
 		else
 			emote("beep")
 			say(pick_string("flockmind.txt", "flockdrone_created"))
+	
+	src.ai.start()
+
+/mob/living/critter/flock/drone/disposing()
+	if ( src.ai ) src.ai.do_shutdown()
+	..()
 
 /mob/living/critter/flock/drone/describe_state()
 	var/list/state = ..()
 	state["update"] = "drone"
 	state["name"] = src.real_name
 	if(src.is_npc)
-		if(istype(src.ai.current_task))
-			state["task"] = src.ai.current_task.name
-		else
-			state["task"] = ""
+		state["task"] = src.ai.get_name()
 	else
 		state["task"] = "controlled"
 	. = state
@@ -512,7 +530,7 @@
 		else
 			emote("scream")
 			say("\[System notification: drone lost.\]")
-	src.ai.die()
+	src.ai.do_shutdown()
 	walk(src, 0)
 	// transfer our resources to our heart
 	var/obj/item/organ/heart/flock/core = src.organHolder.get_organ("heart")
@@ -568,7 +586,7 @@
 	if(src.floorrunning)
 		src.end_floorrunning()
 	if(src.ai)
-		src.ai.die()
+		src.ai.do_shutdown()
 	emote("scream")
 	say("\[System notification: drone diffracting.\]")
 	if(src.controller)

@@ -28,7 +28,7 @@
 	// do i pay for building?
 	var/pays_to_construct = 1
 	// AI STUFF
-	var/datum/aiHolder/flock/ai = null
+	var/datum/ai_graph_root/ai = null
 	is_npc = 1
 
 /mob/living/critter/flock/setup_healths()
@@ -129,7 +129,7 @@
 	if(src.is_npc)
 		// tell the npc AI to go after the target
 		if(src.ai)
-			src.ai.rally(target)
+			src.ai.issue_command(list("command"="move","move_target"=get_turf(target),"move_adj"=null,"move_dist"=100))///turf/proc/AllDirsTurfsWithAccess))
 	else
 		// tell whoever's controlling the critter to come to the flockmind, pronto
 		boutput(src, "<span class='flocksay'><b>\[SYSTEM: The flockmind requests your presence immediately.\]</b></span>")
@@ -349,7 +349,7 @@
 					"You hear hissing and spraying.")
 				playsound(target, "sound/misc/flockmind/flockdrone_quickbuild.ogg", 50, 1)
 				if(target.is_npc)
-					target.ai.wait()
+					target.ai.issue_command(list("command"="wait","wait_duration"=10,"wait_name"="Building"))
 
 	onEnd()
 		..()

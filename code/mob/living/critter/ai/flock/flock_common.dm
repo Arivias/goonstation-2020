@@ -1,3 +1,4 @@
+/*
 /datum/aiHolder/flock
 	// if there's ever specific flock values here they go
 
@@ -9,3 +10,4 @@
 
 /datum/aiTask/prioritizer/flock
 	// if there's ever specific flock values here they go
+*/

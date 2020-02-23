@@ -14,8 +14,7 @@
 	..(F)	
 
 	// ai setup
-	src.ai = new /datum/aiHolder/flock/bit()
-	src.ai.owner = src
+	src.ai = new /datum/ai_graph_root(src)
 
 	SPAWN_DBG(10) // aaaaaaa
 		animate_bumble(src)

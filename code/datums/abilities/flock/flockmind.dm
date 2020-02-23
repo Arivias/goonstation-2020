@@ -58,7 +58,7 @@
 /datum/targetable/flockmindAbility/spawnEgg/cast(atom/target)
 	if(..())
 		return 1
-	var/mob/living/intangible/flock/flockmind/F = holder.owner
+	var/mob/living/intangible/flock/flockmind/F = holder.owner //TODO: stop from spawning inside walls
 	if(F)
 		F.spawnEgg()
 
@@ -320,11 +320,11 @@
 	if (istype(target,/obj/machinery/door/airlock))
 		var/obj/machinery/door/airlock/D = target
 		if (get_dist(holder.owner,target) > D.radiorange)
-			boutput(usr,__red("Transmission failed: Target out of range."))
+			boutput(usr,__red("PacketHack Error: Target out of range."))
 			return 999
-		var/cmd = input("Select command to send.","Packethack") in list("open","close","lock","unlock","secure_open","secure_close")
+		var/cmd = input("Select command to send.","PacketHack") in list("open","close","lock","unlock","secure_open","secure_close")
 		if (D.aiControlDisabled > 0 || D.cant_emag)
-			boutput(usr,__red("PacketHack error: Command rejected."))
+			boutput(usr,__red("PacketHack Error: Command rejected."))
 			return
 		switch( cmd ) //copypasted from airlock
 			if("open")
@@ -345,7 +345,7 @@
 			if("lock")
 				D.locked = 1
 				D.update_icon()
-				D.send_status()
+				D.send_status(,"0xDEADBEFF")
 
 			if("secure_open")
 				SPAWN_DBG(0)
@@ -370,7 +370,7 @@
 					D.update_icon()
 					sleep(D.operation_time)
 					D.send_status(,"0xDEADBEFF")
-		boutput(usr,__blue("PacketHack: Command Accepted."))
+		boutput(usr,__blue("PacketHack - Response: Ok."))
 
 		return
 		/*
@@ -380,7 +380,7 @@
 		S.data["command"] = cmd*/
 		//do stuff
 	
-	boutput(usr,__red("No target."))
+	boutput(usr,__red("PacketHack Error: No target."))
 	return 999
 
 	/*
