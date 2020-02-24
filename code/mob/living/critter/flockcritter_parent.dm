@@ -130,9 +130,10 @@
 		// tell the npc AI to go after the target
 		if(src.ai)
 			src.ai.issue_command(list("command"="move","move_target"=get_turf(target),"move_adj"=null,"move_dist"=100))///turf/proc/AllDirsTurfsWithAccess))
+			flock_speak(src,"Command recieved. Navigating.",src.flock)
 	else
 		// tell whoever's controlling the critter to come to the flockmind, pronto
-		boutput(src, "<span class='flocksay'><b>\[SYSTEM: The flockmind requests your presence immediately.\]</b></span>")
+		boutput(src, "<span class='flocksay'><b>\[SYSTEM: The flockmind requests your presence at [target.loc] immediately.\]</b></span>")
 
 //////////////////////////////////////////////////////
 // VARIOUS FLOCK ACTIONS

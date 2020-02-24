@@ -157,6 +157,7 @@
 		flock_speak(null, "Control of drone [src.real_name] surrended.", src.flock)
 		// clear refs
 		controller = null
+	src.move_dir = 0
 
 // sometimes we want a vegetable drone, ok
 /mob/living/critter/flock/drone/proc/dormantize()
@@ -862,3 +863,10 @@
 	if(temp)
 		animate(temp) // cancel animation
 	..()
+
+
+//Controllable by dragging
+mob/living/critter/flock/drone/MouseDrop(over_object,src_location,over_location,src_control,over_control,params) 
+	if ( !istype(usr,/mob/living/intangible/flock) && !istype(usr,/mob/living/critter/flock) )
+		return ..()
+	src.rally(over_location)

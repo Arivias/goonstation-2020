@@ -14,13 +14,6 @@ datum/ai_graph_root/flockdrone
 		//add selector to command filter then to root
 		src.set_root( src.create(/datum/ai_graph_node/inline/command_filter/flock,list(S)) )
 
-datum/ai_graph_node/inline/command_filter/flock
-	name = "COMMAND_FILTER_FLOCK"
-	New(datum/ai_graph_node/through)
-		var/datum/ai_graph_node/inline/overclock/N = new /datum/ai_graph_node/inline/overclock(new /datum/ai_graph_node/moveto)
-		N.default_interval = 1
-		..(through,list("move"=N))
-
 /*
 root
 	command_filter selector
