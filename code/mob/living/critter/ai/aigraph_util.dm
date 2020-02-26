@@ -53,10 +53,14 @@ datum/ai_graph_node/moveto
 		
 	on_tick(list/data)
 		..()
+		message_admins("[src.host] Move target: [data["move_target"]]")
 		walk(host,0)
+		var/mob/living/H = host
+		if ( !H.is_npc )
+			return AI_GRAPH_NODE_RESULT_ABORT
 		if ( src.path && cstep <= length(src.path) )
 			var/turf/T = src.path[src.cstep]
-			var/lag = ("move_lag" in data) ? data["move_lag"] : 4
+			var/lag = ("move_lag" in data) ? data["move_lag"] : H.ai_movedelay
 			walk_to(host,T,0,lag)
 			sleep(lag)
 			if (get_dist(get_turf(host),T) < 1)

@@ -867,6 +867,6 @@
 
 //Controllable by dragging
 mob/living/critter/flock/drone/MouseDrop(over_object,src_location,over_location,src_control,over_control,params) 
-	if ( !istype(usr,/mob/living/intangible/flock) && !istype(usr,/mob/living/critter/flock) )
+	if ( !isflock(usr) )
 		return ..()
 	src.rally(over_location)

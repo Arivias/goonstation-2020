@@ -147,6 +147,11 @@ datum/ai_graph_node/branch						//Nodes designed to contain other nodes
 			children[head].on_interrupt()
 		..()
 	
+	weight(list/data)
+		. = -1
+		for ( var/datum/ai_graph_node/N in src.children )
+			. = max(.,N.weight(data))
+	
 	get_name()
 		if ( head <= length(children) )
 			return children[head].get_name()
@@ -426,3 +431,39 @@ datum/ai_graph_node/inline/overclock_modifier
 	New(datum/ai_graph_node/N,rate)
 		..(N)
 		src.interval = rate ? rate : 10
+
+datum/ai_graph_node/inline/visible_items
+	name = "INLINE_VISIBLE_ITEMS"
+	id = "visible_items"
+	var/range
+
+	New(datum/ai_graph_node/N,range)
+		src.range = range
+		. = ..()
+
+	do_inline(list/data)
+		. = list()
+		var/inview
+		if( range )
+			inview = view(range,src.host)
+		else
+			inview = view(src.host)
+		for (var/obj/item/I in inview)
+			. += I
+
+datum/ai_graph_node/inline/visible_items/nearest
+	name = "INLINE_NEAREST_ITEM"
+	id = "nearest_item"
+
+	do_inline(list/data)
+		var/inview
+		if( range )
+			inview = view(range,src.host)
+		else
+			inview = view(src.host)
+		for (var/obj/item/I in inview)
+			if ( !. )
+				. = I
+			else
+				if ( get_dist(src.host,I) < get_dist(src.host,(.).loc) )
+					. = I

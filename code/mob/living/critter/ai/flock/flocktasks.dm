@@ -1,3 +1,23 @@
+datum/ai_graph_node/inline/visible_items/nearest/flock_harvest_core
+	name = "Scanning for scraps to absorb"
+	id = "move_target"														//write to move target so we don't need to change anything to get moveto to work
+
+	New()
+		var/datum/ai_graph_node/branch/sequence/S = new()
+		S.add_new_child(/datum/ai_graph_node/moveto/flock)
+		. = ..(S)
+	
+	weight(list/data)
+		. = -1
+		src.add_data(data)
+		if ( data[src.id] )
+			var/mob/living/critter/flock/F = src.host
+			if ( F.resources >= 150 )										//low priority. we already have plenty of resources
+				. = 10
+			else
+				. = 50 - (get_dist(src.host,data[src.id].loc) - 1) * 5
+		src.remove_data(data)
+
 /*
 // base shared flock AI stuff
 // main default "what do we do next" task, run for one tick and then switches to a new task

@@ -9,6 +9,7 @@ datum/ai_graph_root/flockdrone
 
 		//main selector
 		S.add_new_child(/datum/ai_graph_node/wander)
+		S.add_new_child(/datum/ai_graph_node/inline/visible_items/nearest/flock_harvest_core)
 
 
 		//add selector to command filter then to root

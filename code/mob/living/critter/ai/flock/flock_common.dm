@@ -2,7 +2,7 @@
 datum/ai_graph_node/inline/command_filter/flock
 	name = "COMMAND_FILTER_FLOCK"
 	New(datum/ai_graph_node/through)
-		var/datum/ai_graph_node/inline/overclock/flock_move/N = new(1)
+		var/datum/ai_graph_node/inline/overclock/flock_move/N = new()
 		..(through,list("move"=N))
 
 //TODO: add flock navigation
@@ -11,7 +11,8 @@ datum/ai_graph_node/moveto/flock
 
 datum/ai_graph_node/inline/overclock/flock_move
 	New(interval)
-		. = ..(new /datum/ai_graph_node/moveto/flock(), interval)
+		src.default_interval = interval ? interval : 1
+		. = ..(new /datum/ai_graph_node/moveto/flock(), src.default_interval)
 
 /*
 /datum/aiHolder/flock
