@@ -202,7 +202,7 @@ datum/ai_graph_node/branch/sequence			 	//A sequence branch will run its nodes i
 		switch(last_result)
 			if (AI_GRAPH_NODE_RESULT_IN_PROGRESS)
 				return last_result
-			if (AI_GRAPH_NODE_RESULT_SKIP,AI_GRAPH_NODE_RESULT_IN_PROGRESS)
+			if (AI_GRAPH_NODE_RESULT_SKIP,AI_GRAPH_NODE_RESULT_COMPLETED)
 				return src.advance()
 		//abort or some other bad state recieved
 		return src.on_abort()
@@ -210,7 +210,7 @@ datum/ai_graph_node/branch/sequence			 	//A sequence branch will run its nodes i
 	proc
 		advance()
 			head += 1
-			if ( head >= length(children) )
+			if ( head > length(children) )
 				src.reset()
 				return AI_GRAPH_NODE_RESULT_COMPLETED
 			else
@@ -238,6 +238,7 @@ datum/ai_graph_node/branch/selector			//Runs the node with the highest weight (i
 			for (var/i = 1; i <= length(children); i++)
 				var/W = children[i].weight(data)
 				weights += W
+				//message_admins("[children[i]] weight: [W]")
 				if ( W > best ) best = W
 			if ( best == -1 ) return on_abort()
 			var/list/possibleNodes[0]
@@ -432,13 +433,19 @@ datum/ai_graph_node/inline/overclock_modifier
 		..(N)
 		src.interval = rate ? rate : 10
 
-datum/ai_graph_node/inline/visible_items
+datum/ai_graph_node/inline/visible_reachable_items
 	name = "INLINE_VISIBLE_ITEMS"
 	id = "visible_items"
 	var/range
+	
+	var/reach = 0
+	var/adj = /turf/proc/CardinalTurfsWithAccess
+	var/heuristic = /turf/proc/Distance
+	var/dist = 20
 
-	New(datum/ai_graph_node/N,range)
-		src.range = range
+	New(datum/ai_graph_node/N,range,reach)
+		src.range = range ? range : 20
+		src.reach = reach ? reach : 0
 		. = ..()
 
 	do_inline(list/data)
@@ -449,9 +456,20 @@ datum/ai_graph_node/inline/visible_items
 		else
 			inview = view(src.host)
 		for (var/obj/item/I in inview)
-			. += I
+			if ( src.can_target(I) )
+				. += I
+	
+	proc
+		can_target(obj/item/I)
+			. = 1
+			if ( I.anchored /*|| !isturf(I.loc)*/ || I.loc == src.host || !cirrAstar(get_turf(src.host),get_turf(I),src.reach,src.adj,src.heuristic,src.dist,null,null) )
+				return 0
+			if ( istype(I,/obj/item/paper_bin) )
+				var/obj/item/paper_bin/P = I
+				if ( P.amount <= 0 )
+					return 0
 
-datum/ai_graph_node/inline/visible_items/nearest
+datum/ai_graph_node/inline/visible_reachable_items/nearest
 	name = "INLINE_NEAREST_ITEM"
 	id = "nearest_item"
 
@@ -462,8 +480,10 @@ datum/ai_graph_node/inline/visible_items/nearest
 		else
 			inview = view(src.host)
 		for (var/obj/item/I in inview)
+			if ( !src.can_target(I) )
+				continue
 			if ( !. )
 				. = I
 			else
-				if ( get_dist(src.host,I) < get_dist(src.host,(.).loc) )
+				if ( get_dist(src.host,I) < get_dist(src.host,.) )
 					. = I

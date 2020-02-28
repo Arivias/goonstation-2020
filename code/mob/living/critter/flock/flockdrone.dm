@@ -193,6 +193,7 @@
 		special_desc += "<br><span class='bold'>Flock:</span> [src.flock ? src.flock.name : "none"]"
 		special_desc += "<br><span class='bold'>Resources:</span> [src.resources]"
 		special_desc += "<br><span class='bold'>System Integrity:</span> [round(src.get_health_percentage()*100)]%"
+		special_desc += "<br><span class='bold'>Status:</span> [src.ai.get_name()]"
 		special_desc += "<br><span class='bold'>Cognition:</span> [src.is_npc ? "TORPID" : "SAPIENT"]"
 		special_desc += "<br><span class='bold'>###=-</span></span>"
 		return special_desc

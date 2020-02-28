@@ -28,10 +28,16 @@ datum/ai_graph_node/wander
 //_lag : movement lag
 datum/ai_graph_node/moveto
 	name = "Moving"
+	weight = 1
 	var/list/path
 	var/cstep = 2
 	var/patience = 5
 	var/fails = 0
+	var/prox = 0
+
+	New(prox)
+		src.prox = prox ? prox : 0
+		. = ..()
 
 	reset()
 		path = null
@@ -53,7 +59,6 @@ datum/ai_graph_node/moveto
 		
 	on_tick(list/data)
 		..()
-		message_admins("[src.host] Move target: [data["move_target"]]")
 		walk(host,0)
 		var/mob/living/H = host
 		if ( !H.is_npc )
@@ -93,7 +98,7 @@ datum/ai_graph_node/moveto
 				start = get_turf(O)
 			if ( !start ) return null
 			var/end = data["move_target"]
-			var/prox = ("move_prox" in data) ? data["move_prox"] : 0
+			var/prox = ("move_prox" in data) ? data["move_prox"] : src.prox
 			var/exclude = ("move_exclude" in data) ? data["move_exclude"] : list()
 			var/adj = ("move_adj" in data) ? data["move_adj"] : /turf/proc/CardinalTurfsWithAccess
 			var/dist = ("move_dist" in data) ? data["move_dist"] : 30

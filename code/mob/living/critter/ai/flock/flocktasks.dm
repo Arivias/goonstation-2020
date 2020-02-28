@@ -1,11 +1,13 @@
-datum/ai_graph_node/inline/visible_items/nearest/flock_harvest_core
+//HARVESTING
+datum/ai_graph_node/inline/visible_reachable_items/nearest/flock_harvest_core
 	name = "Scanning for scraps to absorb"
 	id = "move_target"														//write to move target so we don't need to change anything to get moveto to work
 
 	New()
 		var/datum/ai_graph_node/branch/sequence/S = new()
-		S.add_new_child(/datum/ai_graph_node/moveto/flock)
-		. = ..(S)
+		S.add_new_child(/datum/ai_graph_node/inline/overclock/flock_move,list(null,list(1)))
+		S.add_new_child(/datum/ai_graph_node/flock/harvest)
+		. = ..(S,null,1)
 	
 	weight(list/data)
 		. = -1
@@ -15,8 +17,170 @@ datum/ai_graph_node/inline/visible_items/nearest/flock_harvest_core
 			if ( F.resources >= 150 )										//low priority. we already have plenty of resources
 				. = 10
 			else
-				. = 50 - (get_dist(src.host,data[src.id].loc) - 1) * 5
+				. = 50 - (get_dist(src.host,data[src.id].loc) - 1) * 3
+		var/mob/living/critter/flock/drone/D = src.host
+		if( D.absorber.item )
+			. /= 2															//we really don't need to do this at this moment
 		src.remove_data(data)
+
+datum/ai_graph_node/flock/harvest
+	name = "Harvesting"
+
+	weight(list/data)
+		. = src.weight
+		if ( !data["move_target"] || get_dist(data["move_target"],src.host) > 1 || src.flockdrone.absorber.item || !src.flockdrone.is_npc )
+			return -1
+		if ( src.flockdrone.absorber.item )
+			return -2
+	check(list/data)
+		. = AI_GRAPH_NODE_RESULT_IN_PROGRESS
+		var/W = src.weight(data)
+		if ( W == -1  )
+			return AI_GRAPH_NODE_RESULT_ABORT
+		if ( W == -2 )
+			return AI_GRAPH_NODE_RESULT_SKIP
+	
+	on_tick(list/data)
+		src.flockmob.set_hand(1)
+		if ( !src.flockdrone.absorber.item )
+			src.flockdrone.dir = get_dir(src.host,data["move_target"])
+			if ( !src.flockdrone.get_active_hand().item )
+				sleep(2)
+				src.flockdrone.hand_attack(data["move_target"])
+			sleep(2)
+			src.flockdrone.absorber.equip(data["move_target"])
+		return AI_GRAPH_NODE_RESULT_COMPLETED
+
+
+//CONVERTING
+datum/ai_graph_node/branch/sequence/flock_convert
+	name = "Converting tiles"
+
+	weight(list/data)
+		if ( istype(src.host,/mob/living/critter/flock/drone) )		//ignore flockbits
+			var/mob/living/critter/flock/drone/D = src.host
+			if ( D.resources < 20 )									//can't afford
+				return -1
+		. = ..()
+	
+	New()
+		. = ..()
+		src.add_new_child(/datum/ai_graph_node/inline/visible_reachable_flocktiles,list(new /datum/ai_graph_node/branch/selector/flock_convert(),null,null,true))
+		src.add_new_child(/datum/ai_graph_node/inline/overclock/flock_move,list(null,list(1)))
+		src.add_new_child(/datum/ai_graph_node/flock/convert)
+
+datum/ai_graph_node/branch/selector/flock_convert
+	name = "Looking for tiles to convert"
+
+	New()
+		. = ..()
+		src.add_new_child(/datum/ai_graph_node/flock/convert_weight_floor)
+
+datum/ai_graph_node/flock/convert_weight_floor
+	name = "Weighting floors"
+
+	weight(list/data)
+		. = -1
+		var/list/turfs = data["turfs"]
+		if ( !turfs )
+			return -1
+		for (var/turf/T in turfs)
+			if ( !is_blocked_turf(T) )
+				. = max(.,30-turfs[T]*3)
+		var/othertiles = 0
+		for (var/turf/simulated/floor/feather/F in view(src.host))	//high priority mode (need space to lay eggs)
+			if ( !(locate(/obj/flock_structure/egg) in F) )
+				othertiles += 1
+		if ( !othertiles )
+			. += 100
+		else
+			. -= othertiles * 3
+
+	on_tick(list/data)
+		. = ..(data)
+		var/turf/best = null
+		var/list/turfs = data["turfs"]
+		for (var/turf/T in turfs)
+			if ( !is_blocked_turf(T) )
+				if ( !best )
+					best = T
+				else
+					if ( turfs[T] < turfs[best] )
+						best = T
+		if ( !best )
+			return AI_GRAPH_NODE_RESULT_ABORT
+		data["move_target"] = best
+		return AI_GRAPH_NODE_RESULT_COMPLETED
+
+datum/ai_graph_node/flock/convert
+	name = "Converting"
+	weight = 1
+
+	on_begin(list/data)
+		. = ..(data)
+		src.flockdrone.intent = INTENT_HELP
+		src.flockdrone.set_hand(2)
+		sleep(2)
+		src.flockdrone.hand_attack(data["move_target"])
+		sleep(2)
+	
+	on_tick(list/data)
+		if ( !src.flockdrone.is_npc ) return AI_GRAPH_NODE_RESULT_ABORT
+		if ( !actions.running[src.host] ) return AI_GRAPH_NODE_RESULT_COMPLETED
+		for (var/datum/action/bar/flock_convert/ACTION in actions.running[src.host])
+			return AI_GRAPH_NODE_RESULT_IN_PROGRESS
+		return AI_GRAPH_NODE_RESULT_COMPLETED
+
+
+//REPLICATE
+datum/ai_graph_node/inline/visible_reachable_flocktiles/replicate_core
+	name = "Replicating"
+	id = "move_target"
+
+	New()
+		var/datum/ai_graph_node/branch/sequence/S = new()
+		S.add_new_child(/datum/ai_graph_node/inline/overclock/flock_move)
+		S.add_new_child(/datum/ai_graph_node/flock/replicate)
+		. = ..(S,null,0,0)
+
+	do_inline(list/data)
+		var/turf/T
+		var/best
+		for ( var/turf/simulated/floor/feather/F in view(src.host) )
+			if( !is_blocked_turf(F) && !(locate(/obj/flock_structure/egg) in F) )
+				var/list/L = cirrAstar(get_turf(src.host),T,src.reach,src.adj,src.heuristic,src.dist,null,null)
+				if ( L )
+					if ( !T )
+						T = F
+						best = length(L)
+					else
+						if ( length(L) < best )
+							T = F
+							best = length(L)
+		return T
+
+datum/ai_graph_node/flock/replicate
+	name = "Replicating"
+
+	on_begin(list/data)
+		. = ..(data)
+		src.flockdrone.create_egg()
+	on_tick(list/data)
+		if ( !src.flockdrone.is_npc ) return AI_GRAPH_NODE_RESULT_ABORT
+		if ( !actions.running[src.host] ) return AI_GRAPH_NODE_RESULT_COMPLETED
+		for (var/datum/action/bar/flock_egg/ACTION in actions.running[src.host])
+			return AI_GRAPH_NODE_RESULT_IN_PROGRESS
+		return AI_GRAPH_NODE_RESULT_COMPLETED
+		
+
+	weight(list/data)
+		if ( src.flockdrone.resources < 100 || !data["move_target"] )
+			return -1
+		var/count = 0
+		for (var/mob/living/critter/flock/drone/D in view(src))
+			count++
+		return 100-count*10
+
 
 /*
 // base shared flock AI stuff

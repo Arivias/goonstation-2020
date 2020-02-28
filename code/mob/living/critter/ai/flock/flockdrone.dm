@@ -4,13 +4,14 @@ datum/ai_graph_root/flockdrone
 		
 		var/datum/ai_graph_node/branch/S = src.create(/datum/ai_graph_node/branch/selector)
 		S.name = "Thinking"
-		var/datum/ai_graph_node/N
+		
 		//build flock decision tree here
 
 		//main selector
 		S.add_new_child(/datum/ai_graph_node/wander)
-		S.add_new_child(/datum/ai_graph_node/inline/visible_items/nearest/flock_harvest_core)
-
+		S.add_new_child(/datum/ai_graph_node/inline/visible_reachable_items/nearest/flock_harvest_core)
+		S.add_new_child(/datum/ai_graph_node/branch/sequence/flock_convert)
+		S.add_new_child(/datum/ai_graph_node/inline/visible_reachable_flocktiles/replicate_core)
 
 		//add selector to command filter then to root
 		src.set_root( src.create(/datum/ai_graph_node/inline/command_filter/flock,list(S)) )
