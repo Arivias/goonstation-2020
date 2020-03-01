@@ -195,7 +195,7 @@
 		special_desc += "<br><span class='bold'>System Integrity:</span> [round(src.get_health_percentage()*100)]%"
 		special_desc += "<br><span class='bold'>Status:</span> [src.ai.get_name()]"
 		special_desc += "<br><span class='bold'>Cognition:</span> [src.is_npc ? "TORPID" : "SAPIENT"]"
-		special_desc += "<br><span class='bold'>###=-</span></span>"
+		special_desc += "<br><span class='bold'>###=- dir: [src.ai_move_intent]</span></span>"
 		return special_desc
 	else
 		return null // give the standard description

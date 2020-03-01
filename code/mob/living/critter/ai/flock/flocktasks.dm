@@ -74,7 +74,9 @@ datum/ai_graph_node/branch/selector/flock_convert
 
 	New()
 		. = ..()
+		//ADD CONVERT TARGET PRIORITIZERS HERE
 		src.add_new_child(/datum/ai_graph_node/flock/convert_weight_floor)
+		src.add_new_child(/datum/ai_graph_node/flock/convert_weight_containers)
 
 datum/ai_graph_node/flock/convert_weight_floor
 	name = "Weighting floors"
@@ -95,6 +97,8 @@ datum/ai_graph_node/flock/convert_weight_floor
 			. += 100
 		else
 			. -= othertiles * 3
+		if ( src.flockdrone.resources > 100 )
+			. += 20
 
 	on_tick(list/data)
 		. = ..(data)
@@ -102,6 +106,41 @@ datum/ai_graph_node/flock/convert_weight_floor
 		var/list/turfs = data["turfs"]
 		for (var/turf/T in turfs)
 			if ( !is_blocked_turf(T) )
+				if ( !best )
+					best = T
+				else
+					if ( turfs[T] < turfs[best] )
+						best = T
+		if ( !best )
+			return AI_GRAPH_NODE_RESULT_ABORT
+		data["move_target"] = best
+		return AI_GRAPH_NODE_RESULT_COMPLETED
+datum/ai_graph_node/flock/convert_weight_containers
+	name = "Weighting containers"
+
+	weight(list/data)
+		. = -1
+		var/list/turfs = data["turfs"]
+		if ( !turfs )
+			return -1
+		for (var/turf/T in turfs)
+			var/obj/storage/S = locate(/obj/storage) in T
+			if (S)
+				. = max(.,40 - get_dist(src.host,S) * 2)
+		var/visible_loose_items = 0
+		for (var/obj/item/I in view(src.host))
+			visible_loose_items++
+		. -= ( 7 - visible_loose_items ) * 2
+		if ( src.flockdrone.resources > 100 )
+			. += 20
+
+	on_tick(list/data)
+		. = ..(data)
+		var/turf/best = null
+		var/list/turfs = data["turfs"]
+		for (var/turf/T in turfs)
+			var/obj/storage/S = locate(/obj/storage) in T
+			if ( S )
 				if ( !best )
 					best = T
 				else

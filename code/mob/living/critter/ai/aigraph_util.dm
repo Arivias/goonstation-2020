@@ -44,6 +44,9 @@ datum/ai_graph_node/moveto
 		cstep = 2
 		patience = 5
 		fails = 0
+		if ( istype(src.host,/mob) )
+			var/mob/M = src.host
+			M.ai_move_intent = 0
 	check(list/data)
 		if ( host && (istype(host,/mob) || istype(host,/obj)) && (data && "move_target" in data) )
 			var/lpath = get_path(data)
@@ -66,23 +69,33 @@ datum/ai_graph_node/moveto
 		if ( src.path && cstep <= length(src.path) )
 			var/turf/T = src.path[src.cstep]
 			var/lag = ("move_lag" in data) ? data["move_lag"] : H.ai_movedelay
+			message_admins("dir: [H.ai_move_intent]")
+			if ( src.cstep <= length(src.path) )
+				H.ai_move_intent = get_dir(H,src.path[src.cstep])
 			walk_to(host,T,0,lag)
 			sleep(lag)
 			if (get_dist(get_turf(host),T) < 1)
 				cstep++
 				fails = 0
 			else
-				var/found_door = 0
+				var/found_possible_bypass = 0
 				for (var/obj/machinery/door/D in T.contents)
 					D.Bumped(host)
-					found_door = 1
-				if (!found_door)
+					found_possible_bypass = 1
+				for (var/mob/M in T.contents)
+					if ( M.density && H.ai_move_intent != M.ai_move_intent )
+						M.Bump(H,1)
+						found_possible_bypass = 1
+				if (!found_possible_bypass)
 					fails++
 					if ( fails > patience ) return AI_GRAPH_NODE_RESULT_ABORT
 					src.path = get_path(data)
 					src.cstep = 2
 					if ( !path || length(path) == 0 ) return AI_GRAPH_NODE_RESULT_ABORT
+			if ( src.cstep <= length(src.path) )
+				H.ai_move_intent = get_dir(H,src.path[src.cstep])
 			return AI_GRAPH_NODE_RESULT_IN_PROGRESS
+		H.ai_move_intent = 0
 		return AI_GRAPH_NODE_RESULT_COMPLETED
 
 		

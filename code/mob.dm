@@ -15,6 +15,7 @@
 	var/datum/targetable/targeting_spell = null
 
 	var/last_move_trigger = 0
+	var/ai_move_intent = 0
 
 	var/obj/screen/internals = null
 	var/obj/screen/stamina_bar/stamina_bar = null
